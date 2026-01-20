@@ -1,0 +1,38 @@
+name: technical_blueprint
+description: Developer-focused theme with terminal aesthetics
+version: 1.0.0
+
+colors:
+  background: "#1a1f2e"
+  text_primary: "#e4e4e7"
+  text_secondary: "rgba(228, 228, 231, 0.7)"
+  accent: "#22d3ee"
+  accent_secondary: "#98D4A0"
+  card_bg: "rgba(34, 211, 238, 0.05)"
+  border: "rgba(34, 211, 238, 0.2)"
+
+typography:
+  primary_font: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+  code_font: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace"
+  headline_size: "64px"
+  headline_weight: 600
+  body_size: "18px"
+  body_weight: 400
+
+layouts:
+  - title_center
+  - split_50_50
+  - grid_thirds
+  - stat_grid
+  - code_example
+  - cta_final
+
+triggers:
+  content_type:
+    - technical
+    - tutorial
+  audience:
+    - technical
+    - developer
+  technical_depth: 0.6-1.0
+  has_code: true
