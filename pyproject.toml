@@ -29,3 +29,15 @@ deckgen = "deckgen.cli:cli"
 [project.urls]
 Homepage = "https://github.com/cpark4x/deckgen"
 Repository = "https://github.com/cpark4x/deckgen"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["deckgen*"]
+
+[tool.setuptools.package-data]
+deckgen = [
+    "themes/*.yaml",
+    "templates/*.html",
+    "templates/*.js",
+    "templates/layouts/*.html"
+]
