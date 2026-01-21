@@ -1,11 +1,14 @@
 """Main orchestrator for deck generation pipeline."""
 
+import logging
 from pathlib import Path
 from typing import List, Optional
 
 from .analyzer import ContentAnalyzer
 from .designer import ThemeDesigner
 from .renderer import HTMLRenderer
+
+logger = logging.getLogger(__name__)
 
 
 class DeckOrchestrator:
@@ -36,17 +39,24 @@ class DeckOrchestrator:
         Returns:
             Path to generated HTML file
         """
+        logger.info("Starting deck generation for: %s", description[:50])
+        
         # Step 1: Analyze content
+        logger.debug("Step 1: Analyzing content")
         content_brief = self.analyzer.analyze(description, files or [])
 
         # Step 2: Select theme and design slides
+        logger.debug("Step 2: Selecting theme and designing slides")
         theme_name = self.designer.select_theme(
             content_brief, force_theme=theme or ""
         )
         slides = self.designer.design_slides(content_brief, theme_name)
+        logger.info("Selected theme: %s, Generated %d slides", theme_name, len(slides))
         
         # Step 3: Render HTML
-        title = self._extract_title(description)
+        logger.debug("Step 3: Rendering HTML")
+        # Use title from content brief (extracted by analyzer)
+        title = content_brief.get("slides", [{}])[0].get("title", description[:60])
         html = self.renderer.render(slides, theme_name, title)
         
         # Step 4: Save to file
@@ -59,22 +69,8 @@ class DeckOrchestrator:
         with open(output_file, "w") as f:
             f.write(html)
         
+        logger.info("Deck saved to: %s", output_file)
         return str(output_file.absolute())
-    
-    def _extract_title(self, description: str) -> str:
-        """Extract a clean title from description."""
-        # Take first sentence or first 60 characters
-        title = description.split(".")[0].strip()
-        
-        if len(title) > 60:
-            title = title[:57] + "..."
-        
-        # Remove common prefixes
-        for prefix in ["about ", "create deck about ", "presentation about "]:
-            if title.lower().startswith(prefix):
-                title = title[len(prefix):]
-        
-        return title.capitalize()
     
     def _generate_output_path(self, description: str) -> str:
         """Generate output filename from description."""

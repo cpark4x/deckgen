@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+recursive-include deckgen/themes *.yaml
+recursive-include deckgen/templates *.html *.js
