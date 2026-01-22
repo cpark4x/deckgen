@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from .analyzer import ContentAnalyzer
 from .designer import ThemeDesigner
+from .image_generator import ImageGenerator
 from .renderer import HTMLRenderer
 
 logger = logging.getLogger(__name__)
@@ -14,10 +15,16 @@ logger = logging.getLogger(__name__)
 class DeckOrchestrator:
     """Orchestrates the complete deck generation pipeline."""
     
-    def __init__(self):
-        """Initialize orchestrator with all components."""
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize orchestrator with all components.
+        
+        Args:
+            api_key: Optional Gemini API key for image generation.
+                     If not provided, reads from GEMINI_API_KEY env var.
+        """
         self.analyzer = ContentAnalyzer()
         self.designer = ThemeDesigner()
+        self.image_generator = ImageGenerator(api_key=api_key)
         self.renderer = HTMLRenderer()
     
     def create_deck(
@@ -26,6 +33,7 @@ class DeckOrchestrator:
         files: Optional[List[str]] = None,
         theme: Optional[str] = None,
         output_path: Optional[str] = None,
+        generate_images: bool = True,
     ) -> str:
         """
         Create a complete presentation deck.
@@ -35,6 +43,7 @@ class DeckOrchestrator:
             files: Optional list of file paths for context
             theme: Optional theme to force (otherwise auto-selected)
             output_path: Optional output file path
+            generate_images: Whether to generate AI images (default: True)
 
         Returns:
             Path to generated HTML file
@@ -53,8 +62,19 @@ class DeckOrchestrator:
         slides = self.designer.design_slides(content_brief, theme_name)
         logger.info("Selected theme: %s, Generated %d slides", theme_name, len(slides))
         
-        # Step 3: Render HTML
-        logger.debug("Step 3: Rendering HTML")
+        # Step 3: Generate images (if enabled)
+        if generate_images and self.image_generator.enabled:
+            logger.debug("Step 3: Generating images")
+            slides = self.image_generator.generate_images_for_slides(
+                slides=slides,
+                theme_name=theme_name,
+                deck_context=description,
+            )
+        elif generate_images:
+            logger.info("Image generation skipped - no API key configured")
+        
+        # Step 4: Render HTML
+        logger.debug("Step 4: Rendering HTML")
         # Use title from content brief (extracted by analyzer)
         title = content_brief.get("slides", [{}])[0].get("title", description[:60])
         html = self.renderer.render(slides, theme_name, title)

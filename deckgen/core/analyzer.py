@@ -304,7 +304,12 @@ class ContentAnalyzer:
                         "content": para
                     })
         
-        # 3. Closing slide
+        # 3. Ensure minimum slide count (at least 5 slides)
+        min_slides = 5
+        if len(slides) < min_slides - 1:  # -1 for closing slide we'll add
+            slides = self._expand_slides(slides, description, min_slides - 1)
+        
+        # 4. Closing slide
         slides.append({
             "type": "cta",
             "title": "Thank You",
@@ -312,6 +317,78 @@ class ContentAnalyzer:
         })
         
         return slides
+    
+    def _expand_slides(
+        self, 
+        slides: List[Dict[str, Any]], 
+        description: str, 
+        min_count: int
+    ) -> List[Dict[str, Any]]:
+        """Expand slide count by generating topic-based content."""
+        # Extract topic from description
+        topic = self._extract_title(description, [])
+        
+        # Template slides to add based on common presentation structures
+        expansion_templates = [
+            {
+                "type": "statement",
+                "title": "The Challenge",
+                "content": f"Understanding the key challenges and opportunities in {topic.lower()}."
+            },
+            {
+                "type": "points",
+                "title": "Key Insights",
+                "points": [
+                    "Industry trends and market dynamics",
+                    "Critical success factors",
+                    "Emerging opportunities",
+                    "Strategic considerations"
+                ]
+            },
+            {
+                "type": "points",
+                "title": "Our Approach",
+                "points": [
+                    "Research and analysis",
+                    "Strategic planning",
+                    "Implementation roadmap",
+                    "Continuous improvement"
+                ]
+            },
+            {
+                "type": "cards",
+                "title": "Key Benefits",
+                "cards": [
+                    {"title": "Efficiency", "description": "Streamlined processes and improved productivity"},
+                    {"title": "Innovation", "description": "New capabilities and competitive advantages"},
+                    {"title": "Growth", "description": "Expanded opportunities and scalability"}
+                ]
+            },
+            {
+                "type": "numbered",
+                "title": "Next Steps",
+                "items": [
+                    "Review current state and objectives",
+                    "Identify key priorities and resources",
+                    "Develop implementation timeline",
+                    "Execute and measure results"
+                ]
+            },
+        ]
+        
+        # Insert expansion slides after title slide
+        expanded = [slides[0]]  # Keep title slide
+        
+        template_idx = 0
+        while len(expanded) < min_count and template_idx < len(expansion_templates):
+            expanded.append(expansion_templates[template_idx])
+            template_idx += 1
+        
+        # Add any remaining original slides (except title which is already added)
+        for slide in slides[1:]:
+            expanded.append(slide)
+        
+        return expanded
     
     def _extract_title(self, description: str, sections: List[Dict[str, Any]]) -> str:
         """Extract or generate a title."""

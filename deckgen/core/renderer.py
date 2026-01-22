@@ -561,52 +561,62 @@ class HTMLRenderer:
         layout = slide_spec.get("layout", "title_center")
         content = slide_spec.get("content", {})
         active = " active" if is_first else ""
+        bg_image = slide_spec.get("background_image")
+        
+        # Build inline style for background image if present
+        bg_style = ""
+        if bg_image:
+            bg_style = (
+                f'style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), '
+                f'url(data:image/png;base64,{bg_image}); '
+                f'background-size: cover; background-position: center;"'
+            )
         
         if layout == "title_center":
-            return self._render_title_slide(content, active)
+            return self._render_title_slide(content, active, bg_style)
         elif layout == "statement":
-            return self._render_statement_slide(content, active)
+            return self._render_statement_slide(content, active, bg_style)
         elif layout == "bullet_points":
-            return self._render_bullet_slide(content, active)
+            return self._render_bullet_slide(content, active, bg_style)
         elif layout == "numbered_list":
-            return self._render_numbered_slide(content, active)
+            return self._render_numbered_slide(content, active, bg_style)
         elif layout == "grid_thirds":
-            return self._render_cards_slide(content, active)
+            return self._render_cards_slide(content, active, bg_style)
         elif layout == "table_slide":
-            return self._render_table_slide(content, active)
+            return self._render_table_slide(content, active, bg_style)
         elif layout == "code_example":
-            return self._render_code_slide(content, active)
+            return self._render_code_slide(content, active, bg_style)
         elif layout == "architecture":
-            return self._render_architecture_slide(content, active)
+            return self._render_architecture_slide(content, active, bg_style)
         elif layout == "stat_grid":
-            return self._render_stats_slide(content, active)
+            return self._render_stats_slide(content, active, bg_style)
         elif layout == "cta_final":
-            return self._render_cta_slide(content, active)
+            return self._render_cta_slide(content, active, bg_style)
         else:
-            return self._render_simple_slide(content, active)
+            return self._render_simple_slide(content, active, bg_style)
     
-    def _render_title_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_title_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Presentation"))
         subtitle = self._escape_html(content.get("subtitle", ""))
         subtitle_html = f'<p class="subhead">{subtitle}</p>' if subtitle else ""
         
         return f"""
-<div class="slide{active} center">
+<div class="slide{active} center" {bg_style}>
     <h1 class="headline">{title}</h1>
     {subtitle_html}
 </div>"""
     
-    def _render_statement_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_statement_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", ""))
         statement = self._escape_html(content.get("statement", ""))
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <p class="statement">{statement}</p>
 </div>"""
     
-    def _render_bullet_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_bullet_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Key Points"))
         points = content.get("points", [])
         
@@ -616,14 +626,14 @@ class HTMLRenderer:
         ])
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <ul class="bullet-list">
 {points_html}
     </ul>
 </div>"""
     
-    def _render_numbered_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_numbered_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Steps"))
         items = content.get("items", [])
         
@@ -633,14 +643,14 @@ class HTMLRenderer:
         ])
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <ol class="numbered-list">
 {items_html}
     </ol>
 </div>"""
     
-    def _render_cards_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_cards_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", ""))
         cards = content.get("cards", [])
         
@@ -655,19 +665,19 @@ class HTMLRenderer:
         ])
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <div class="{grid_class}">
 {cards_html}
     </div>
 </div>"""
     
-    def _render_table_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_table_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", ""))
         table_data = content.get("table", [])
         
         if not table_data:
-            return self._render_simple_slide({"title": title}, active)
+            return self._render_simple_slide({"title": title}, active, bg_style)
         
         # Get headers from first row keys
         headers = list(table_data[0].keys())
@@ -680,7 +690,7 @@ class HTMLRenderer:
             rows_html += f"        <tr>{cells}</tr>\n"
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <table class="data-table">
         <thead><tr>{header_html}</tr></thead>
@@ -689,17 +699,17 @@ class HTMLRenderer:
     </table>
 </div>"""
     
-    def _render_code_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_code_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Code"))
         code = self._escape_html(content.get("code", "# Example"))
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <pre class="code-block">{code}</pre>
 </div>"""
     
-    def _render_architecture_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_architecture_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Architecture"))
         description = self._escape_html(content.get("description", ""))
         points = content.get("points", [])
@@ -715,13 +725,13 @@ class HTMLRenderer:
         desc_html = f'<p class="statement">{description}</p>' if description else ""
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     {desc_html}
     {points_html}
 </div>"""
     
-    def _render_stats_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_stats_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Impact"))
         stats = content.get("stats", [])
         
@@ -734,30 +744,30 @@ class HTMLRenderer:
         ])
         
         return f"""
-<div class="slide{active}">
+<div class="slide{active}" {bg_style}>
     <h2 class="headline">{title}</h2>
     <div class="stat-grid">
 {stats_html}
     </div>
 </div>"""
     
-    def _render_cta_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_cta_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Thank You"))
         subtitle = self._escape_html(content.get("subtitle", ""))
         
         subtitle_html = f'<p class="subhead">{subtitle}</p>' if subtitle else ""
         
         return f"""
-<div class="slide{active} center">
+<div class="slide{active} center" {bg_style}>
     <h1 class="headline">{title}</h1>
     {subtitle_html}
 </div>"""
     
-    def _render_simple_slide(self, content: Dict[str, Any], active: str) -> str:
+    def _render_simple_slide(self, content: Dict[str, Any], active: str, bg_style: str = "") -> str:
         title = self._escape_html(content.get("title", "Slide"))
         
         return f"""
-<div class="slide{active} center">
+<div class="slide{active} center" {bg_style}>
     <h1 class="headline">{title}</h1>
 </div>"""
     
